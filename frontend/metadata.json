@@ -1,0 +1,6 @@
+{
+  "name": "Wemezekr Heritage Platform",
+  "description": "Ethiopia's literature, historical archives, and ancient manuscript digital registration, preservation, and discovery platform.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

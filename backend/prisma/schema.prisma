@@ -1,0 +1,322 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ===============================
+// USER
+// ===============================
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      UserRole @default(ZONE_ADMIN)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  assessments   Assessment[]
+  collections   Collection[]
+  notifications Notification[]
+
+  @@index([role])
+  @@index([email])
+}
+
+// ===============================
+// REGIONAL STATE
+// ===============================
+
+model Region {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  zones       Zone[]
+  literature  Literature[]
+  archives    Archive[]
+  manuscripts Manuscript[]
+
+  @@index([name])
+}
+
+// ===============================
+// ZONE
+// ===============================
+
+model Zone {
+  id          String   @id @default(cuid())
+  name        String
+  code        String
+  description String?
+  regionId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  region      Region       @relation(fields: [regionId], references: [id], onDelete: Cascade)
+  literature  Literature[]
+  archives    Archive[]
+  manuscripts Manuscript[]
+
+  @@unique([regionId, code])
+  @@index([regionId])
+}
+
+// ===============================
+// LITERATURE
+// ===============================
+
+model Literature {
+  id              String         @id @default(cuid())
+  title           String
+  author          String?
+  language        String?
+  publicationYear Int?
+  category        String?
+  description     String?
+  location        String?
+  status          MaterialStatus @default(PENDING)
+
+  regionId String
+  zoneId   String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  region      Region       @relation(fields: [regionId], references: [id], onDelete: Cascade)
+  zone        Zone         @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+  submissions Submission[]
+
+  @@index([regionId])
+  @@index([zoneId])
+  @@index([status])
+  @@index([title])
+}
+
+// ===============================
+// ARCHIVE
+// ===============================
+
+model Archive {
+  id          String         @id @default(cuid())
+  title       String
+  archiveType String?
+  description String?
+  date        DateTime?
+  language    String?
+  location    String?
+  status      MaterialStatus @default(PENDING)
+
+  regionId String
+  zoneId   String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  region      Region       @relation(fields: [regionId], references: [id], onDelete: Cascade)
+  zone        Zone         @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+  submissions Submission[]
+
+  @@index([regionId])
+  @@index([zoneId])
+  @@index([status])
+  @@index([title])
+}
+
+// ===============================
+// ANCIENT MANUSCRIPT
+// ===============================
+
+model Manuscript {
+  id                     String         @id @default(cuid())
+  title                  String
+  author                 String?
+  estimatedDate          String?
+  language               String?
+  script                 String?
+  description            String?
+  historicalSignificance String?
+  physicalCondition      String?
+  currentLocation        String?
+  status                 MaterialStatus @default(PENDING)
+
+  regionId String
+  zoneId   String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  region      Region       @relation(fields: [regionId], references: [id], onDelete: Cascade)
+  zone        Zone         @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+  submissions Submission[]
+  files       File[]
+
+  @@index([regionId])
+  @@index([zoneId])
+  @@index([status])
+  @@index([title])
+}
+
+// ===============================
+// SUBMISSION
+// ===============================
+
+model Submission {
+  id          String           @id @default(cuid())
+  title       String
+  type        SubmissionType
+  description String?
+  submittedBy String?
+  status      SubmissionStatus @default(SUBMITTED)
+
+  literatureId String?
+  archiveId    String?
+  manuscriptId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  literature Literature? @relation(fields: [literatureId], references: [id], onDelete: Cascade)
+  archive    Archive?    @relation(fields: [archiveId], references: [id], onDelete: Cascade)
+  manuscript Manuscript? @relation(fields: [manuscriptId], references: [id], onDelete: Cascade)
+
+  assessments Assessment[]
+  collection  Collection?
+
+  @@index([status])
+  @@index([type])
+  @@index([literatureId])
+  @@index([archiveId])
+  @@index([manuscriptId])
+}
+
+// ===============================
+// ASSESSMENT
+// ===============================
+
+model Assessment {
+  id           String             @id @default(cuid())
+  submissionId String
+  reviewerId   String?
+  decision     AssessmentDecision
+  score        Float?
+  comments     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  reviewer   User?      @relation(fields: [reviewerId], references: [id], onDelete: SetNull)
+
+  @@index([submissionId])
+  @@index([reviewerId])
+  @@index([decision])
+}
+
+// ===============================
+// COLLECTION
+// ===============================
+
+model Collection {
+  id                 String   @id @default(cuid())
+  submissionId       String   @unique
+  collectedBy        String?
+  collectionDate     DateTime @default(now())
+  collectionLocation String?
+  notes              String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  collector  User?      @relation(fields: [collectedBy], references: [id], onDelete: SetNull)
+
+  @@index([collectedBy])
+  @@index([collectionDate])
+}
+
+// ===============================
+// FILE
+// ===============================
+
+model File {
+  id           String   @id @default(cuid())
+  filename     String
+  originalName String
+  path         String
+  mimeType     String
+  size         Int
+  manuscriptId String?
+  createdAt    DateTime @default(now())
+
+  manuscript Manuscript? @relation(fields: [manuscriptId], references: [id], onDelete: Cascade)
+
+  @@index([manuscriptId])
+}
+
+// ===============================
+// NOTIFICATION
+// ===============================
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+}
+
+// ===============================
+// ENUMS
+// ===============================
+
+enum UserRole {
+  ADMIN
+  REGIONAL_ADMIN
+  ZONE_ADMIN
+  RESEARCHER
+  PUBLIC
+}
+
+enum MaterialStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COLLECTED
+  ARCHIVED
+}
+
+enum SubmissionStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  COLLECTED
+  ARCHIVED
+}
+
+enum SubmissionType {
+  LITERATURE
+  ARCHIVE
+  MANUSCRIPT
+}
+
+enum AssessmentDecision {
+  APPROVED
+  REJECTED
+  NEEDS_REVISION
+}

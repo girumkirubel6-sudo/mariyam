@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-heading: 'Cinzel', 'Noto Serif Ethiopic', Georgia, serif;
+    --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-ethiopic: 'Noto Serif Ethiopic', Georgia, serif;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background-color: #FAF8F5;
+    color: #1E232A;
+  }
+
+  h1, h2, h3, .font-heading {
+    font-family: var(--font-heading);
+    letter-spacing: -0.01em;
+  }
+}
+
+/* Ethiopian heritage motifs and accents */
+.bg-ethiopic-pattern {
+  background-color: #0C3823;
+  background-image: radial-gradient(rgba(212, 175, 55, 0.15) 1px, transparent 1px),
+    radial-gradient(rgba(212, 175, 55, 0.08) 1px, #0C3823 1px);
+  background-size: 24px 24px;
+  background-position: 0 0, 12px 12px;
+}
+
+.bg-parchment-pattern {
+  background-color: #FAF8F5;
+  background-image: radial-gradient(rgba(12, 56, 35, 0.04) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.harag-border {
+  border-image: repeating-linear-gradient(
+    45deg,
+    #D4AF37,
+    #D4AF37 8px,
+    #0C3823 8px,
+    #0C3823 16px,
+    #C9A050 16px,
+    #C9A050 24px
+  ) 2;
+}
+
+.manuscript-border {
+  position: relative;
+}
+
+.manuscript-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  pointer-events: none;
+}
+
+.manuscript-border::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 1px dashed rgba(12, 56, 35, 0.2);
+  pointer-events: none;
+}
